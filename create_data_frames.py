@@ -19,9 +19,9 @@ def get_field_names():
 
 def get_gender(gender_bit):
     if (gender_bit % 2) == 0:
-        gender = 'F'
+        gender = 1
     else:
-        gender = 'M'
+        gender = 0
 
     return gender
 
@@ -50,9 +50,9 @@ def get_emotion(emotion_bit):
 
 def get_intensity(emotional_intensity_bit):
     if emotional_intensity_bit == '01':
-        intensity = 'L'
+        intensity = 0
     else:
-        intensity = 'H'
+        intensity = 1
 
     return intensity
 
@@ -67,13 +67,13 @@ def segregate_function(file_name_without_ext, mean, fieldnames):
     gender = get_gender(gender_bit)
     intensity = get_intensity(emotional_intensity_bit)
 
-    if not os.path.exists('C:\\users\\dvada\\Desktop\\Dissertation\\Code\\dataset.csv'):
-        with open('dataset.csv', 'w', newline='') as my_csv:
+    if not os.path.exists('C:\\users\\dvada\\Desktop\\Dissertation\\Code\\test.csv'):
+        with open('test.csv', 'w', newline='') as my_csv:
             writer = csv.DictWriter(my_csv, fieldnames=fieldnames)
             writer.writeheader()
             my_csv.close()
 
-    with open('dataset.csv', 'a', newline='') as my_csv:
+    with open('test.csv', 'a', newline='') as my_csv:
         writefile = csv.writer(my_csv)
         row = [file_name_without_ext]
         for i in range(0, 20):
