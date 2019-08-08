@@ -8,8 +8,16 @@ import csv
 
 def get_field_names():
     fieldnames = ['filename']
-    for i in range(0, 20):
+    for i in range(0, 40):
         fieldnames.append('mfcc_feature_' + str(i))
+    for i in range(0, 12):
+        fieldnames.append('chroma' + str(i))
+    for i in range(0, 128):
+        fieldnames.append('mel' + str(i))
+    for i in range(0, 7):
+        fieldnames.append('contrast' + str(i))
+    for i in range(0, 6):
+        fieldnames.append('tonnetz' + str(i))
     fieldnames.append('emotion_name')
     fieldnames.append('value')
     fieldnames.append('gender')
@@ -57,7 +65,7 @@ def get_intensity(emotional_intensity_bit):
     return intensity
 
 
-def segregate_function(file_name_without_ext, mean, fieldnames):
+def segregate_function(file_name_without_ext, mfccs, chroma, mel, contrast, tonnetz, fieldnames):
     file_name_without_ext = os.path.splitext(file_name_without_ext)[0]
     emotion_bit = file_name_without_ext.split("-")[2]
     gender_bit = int(file_name_without_ext.split("-")[6])
@@ -67,17 +75,25 @@ def segregate_function(file_name_without_ext, mean, fieldnames):
     gender = get_gender(gender_bit)
     intensity = get_intensity(emotional_intensity_bit)
 
-    if not os.path.exists('C:\\users\\dvada\\Desktop\\Dissertation\\Code\\test.csv'):
-        with open('test.csv', 'w', newline='') as my_csv:
+    if not os.path.exists('C:\\users\\dvada\\Desktop\\Dissertation\\Code\\maxFeatures.csv'):
+        with open('maxFeatures.csv', 'w', newline='') as my_csv:
             writer = csv.DictWriter(my_csv, fieldnames=fieldnames)
             writer.writeheader()
             my_csv.close()
 
-    with open('test.csv', 'a', newline='') as my_csv:
+    with open('maxFeatures.csv', 'a', newline='') as my_csv:
         writefile = csv.writer(my_csv)
         row = [file_name_without_ext]
-        for i in range(0, 20):
-            row.append(mean[i])
+        for i in range(0, 40):
+            row.append(mfccs[i])
+        for i in range(0, 12):
+            row.append(chroma[i])
+        for i in range(0, 128):
+            row.append(mel[i])
+        for i in range(0, 7):
+            row.append(contrast[i])
+        for i in range(0, 6):
+            row.append(tonnetz[i])
         row.append(emotion_name)
         row.append(emotion_bit)
         row.append(gender)
@@ -88,10 +104,15 @@ def segregate_function(file_name_without_ext, mean, fieldnames):
 
 def extract_features(file_name, headers):
     file_name_without_ext = os.path.splitext(file_name)[0]
-    sig, rate = librosa.load(path=path+file_name, sr=SAMPLE_RATE)
-    mfcc_features = librosa.feature.mfcc(sig, sr=rate)
-    mean = mfcc_features.mean(axis=1)
-    segregate_function(file_name_without_ext, mean, headers)
+    X, sample_rate = librosa.load(path=path + file_name, sr=SAMPLE_RATE)
+    stft = np.abs(librosa.stft(X))
+    mfccs = np.mean(librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc=40).T, axis=0)
+    chroma = np.mean(librosa.feature.chroma_stft(S=stft, sr=sample_rate).T, axis=0)
+    mel = np.mean(librosa.feature.melspectrogram(X, sr=sample_rate).T, axis=0)
+    contrast = np.mean(librosa.feature.spectral_contrast(S=stft, sr=sample_rate).T, axis=0)
+    tonnetz = np.mean(librosa.feature.tonnetz(y=librosa.effects.harmonic(X),
+                                              sr=sample_rate).T, axis=0)
+    segregate_function(file_name_without_ext, mfccs, chroma, mel, contrast, tonnetz, headers)
 
 
 if __name__ == '__main__':
@@ -100,4 +121,3 @@ if __name__ == '__main__':
     field_names = get_field_names()
     for file_name_with_ext in os.listdir(path):
         extract_features(file_name_with_ext, field_names)
-
